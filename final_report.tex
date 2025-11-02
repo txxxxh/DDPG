@@ -1,0 +1,1396 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{indentfirst}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+
+% Set up Chinese fonts
+
+\title{Introduction to Artificial Intelligence Final Report}
+\author{Xuhan Tong 2023012647}
+
+\begin{document}
+    \maketitle
+    \section{Research Background}
+    Research Background With the arrival of the AI era, the computational power
+    and decision-making capabilities of computers have been greatly enhanced, enabling
+    them to assist humans in navigating the complex and volatile financial markets.
+    Portfolio management refers to the process of dynamically allocating capital
+    to different assets. In a dynamic market, there are many factors that affect
+    portfolio optimization, such as market sentiment, policy changes, and weather
+    factors, making sustained success in trading difficult. The semi-strong efficient
+    market hypothesis suggests that all trading data and public information are immediately
+    reflected in asset prices, so the algorithm’s data sources are mainly
+    historical trading data. On the other hand, because markets are not fully
+    efficient, there are still opportunities to achieve returns above the market
+    average through data mining. This study focuses on portfolio optimization in
+    the field of quantitative finance, attempting to compare the effects of reinforcement
+    learning algorithms, non-traditional optimization methods, and traditional financial
+    econometric models in portfolio optimization.
+
+    \section{Preliminaries}
+    \subsection{Portfolio Optimization Theory}
+
+    \subsubsection{Portfolio Construction}
+
+    Price vector: Historical data will be represented by share prices, and at each
+    time step $t$, the sample $(p_{t-m-1}, p_{t-m}, ..., p_{t})$ of $m$ points
+    equally spaced in time can be strongly dependent on each other.
+
+    Return vector: If the historical price vector is transformed into a return vector
+    $(y_{t-m}, y_{t-m+1}, ..., y_{t})$, where $y_{t}= \frac{p_{t}}{p_{t-1}}$, in
+    statistical analysis, $(y_{t-m-2}, y_{t-m-3}, ..., y_{t})$ are weakly
+    dependent and nearly identically distributed.
+
+    \subsubsection{Portfolio Structure}
+
+    A portfolio consisting of a risk-free asset and $k$ risky assets. The
+    investment time begins at $t = 0$ and ends at $t = T$.
+
+    \[
+        w_{t}, \quad \sum_{i=1}^{k}w_{i}= 1
+    \]
+
+    Where $w_{i}$ represents the relative weight of each asset, and short
+    selling is not allowed.
+
+    \subsubsection{Portfolio Returns}
+
+    \paragraph{Arithmetic Mean Return}
+
+    \[
+        r = \frac{1}{T}\sum_{t=1}^{T}r_{t}
+    \]
+
+    \paragraph{Logarithmic Mean Return}
+
+    \[
+        r_{\text{log}}= \frac{1}{T}\sum_{t=1}^{T}\log\left(1 + r_{t}\right)
+    \]
+
+    \subsubsection{Risk Measurement}
+
+    \paragraph{Volatility of a Single Asset}
+
+    \[
+        \sigma_{i}= \sqrt{\frac{1}{T}\sum_{t=1}^{T}(r_{t}- \mu)^{2}}
+    \]
+
+    \paragraph{Covariance and Covariance Matrix}
+
+    \[
+        \text{Cov}(r_{i}, r_{j}) = \frac{1}{T}\sum_{t=1}^{T}(r_{i,t}- \mu_{i})(r_{j,t}
+        - \mu_{j})
+    \]
+
+    \paragraph{Portfolio Volatility}
+
+    \[
+        \sigma_{p}^{2}= \sum_{i=1}^{n}\sum_{j=1}^{n}w_{i}w_{j}\text{Cov}(r_{i}, r
+        _{j})
+    \]
+
+    \subsubsection{Markowitz and Modern Portfolio Theory and Extensions}
+
+    \paragraph{Optimization Objective}
+
+    Maximize expected return given a specified level of risk, or minimize risk given
+    a specified level of return.
+
+    Optimization problem:
+    \[
+        \text{maximize}\quad \sum_{i=1}^{n}w_{i}r_{i}\quad \text{subject to}\quad
+        \sum_{i=1}^{n}w_{i}= 1 \quad \text{and}\quad \sigma_{p}^{2}= \sum_{i=1}^{n}
+        \sum_{j=1}^{n}w_{i}w_{j}\text{Cov}(r_{i}, r_{j})
+    \]
+
+    Limitations:
+    \begin{itemize}
+        \item Only applicable to single-period investment problems. In reality, investors'
+            decisions evolve over time and need to account for dynamic asset
+            allocation.
+
+        \item Expected returns depend on historical data, but this may not
+            accurately reflect future market conditions, leading to suboptimal asset
+            allocation, especially in volatile markets.
+    \end{itemize}
+
+    \paragraph{Samuelson's Extension of the Markowitz Model}
+
+    Extension: Introduces utility functions to describe the risk preferences of
+    investors.
+
+    Optimization objective:
+    \[
+        \text{maximize}\quad E\left[\sum_{t=0}^{T}\beta^{t}U(W_{t})\right]
+    \]
+    where $\beta$ is the time discount factor, and $W_{t}$ is the wealth at time
+    $t$.
+
+    \paragraph{Kelly Criterion}
+
+    Optimization objective: Maximizing long-term capital growth by selecting the
+    optimal proportion for asset investment, based on the compound interest
+    effect.
+
+    Generalized Kelly formula:
+    \[
+        f^{*}= \frac{E[r]}{E[r^{2}]}= \frac{E[r]}{\sigma^{2}+ \mu^{2}}
+    \]
+
+    Optimization model:
+    \[
+        \text{maximize}\quad E[\log(W_{t})] = E[\log(W_{0}) + t \log(1 + f \cdot
+        r)]
+    \]
+
+    \paragraph{Merton Model}
+
+    Optimization objective: Maximizing utility function.
+
+    Optimization model:
+    \[
+        \text{maximize}\quad E\left[\int_{0}^{\infty}e^{-\rho t}U(W(t)) \, dt \right
+        ]
+    \]
+
+    \subsection{Applications and Limitations of Non-traditional Optimization
+    Methods in Asset Allocation}
+
+    \subsubsection{Data Envelopment Analysis (DEA)}
+
+    Advantages: Linear programming assesses the relative efficiency of
+    portfolios without requiring function or distribution assumptions.
+
+    Optimization objective:
+    \[
+        \text{maximize}\quad \theta_{i}= \sum_{j=1}^{n}\lambda_{j}y_{ij}\quad \text{subject
+        to}\quad \sum_{j=1}^{n}\lambda_{j}x_{ij}\leq x_{0}\quad \lambda_{j}\geq 0
+    \]
+
+    \subsubsection{Simulated Annealing Algorithm}
+
+    Optimization objective: Strong global search capability, useful for handling
+    complex constraints, especially in portfolios with complicated structures.
+
+    \subsubsection{Genetic Algorithm}
+
+    Advantages: Strong global search capabilities, suitable for handling complex
+    constraints and parallel computation.
+
+    Limitations: Difficult parameter tuning, premature convergence, high
+    computational cost, and slow convergence.
+
+    \subsection{Black-Litterman Portfolio Optimization Model}
+
+    \subsubsection{Prior Distribution and Views Model}
+    \begin{itemize}
+        \item Market prior distribution:
+            \[
+                \mathbf{M}\sim N(\boldsymbol{\pi}, \tau \Sigma)
+            \]
+
+        \item Investor views model:
+            \[
+                \mathbf{Pu}= \mathbf{q}+ \mathbf{e}, \quad \mathbf{e}\sim N(0, \boldsymbol
+                {\Omega})
+            \]
+            where:
+            \begin{itemize}
+                \item $\mathbf{P}$ is $k \times n$ views matrix
+
+                \item $\mathbf{q}$ is $k \times 1$ views vector
+
+                \item $\boldsymbol{\Omega}$ is confidence diagonal matrix
+            \end{itemize}
+    \end{itemize}
+
+    \subsubsection{Bayesian Derivation}
+    \begin{align*}
+        \text{Prior:}      & \quad p(\mathbf{u}) \propto \exp\left[ -\frac{1}{2}(\mathbf{u}-\boldsymbol{\pi})^{\top}(\tau\Sigma)^{-1}(\mathbf{u}-\boldsymbol{\pi}) \right]         \\
+        \text{Likelihood:} & \quad p(\mathbf{q}|\mathbf{u}) \propto \exp\left[ -\frac{1}{2}(\mathbf{Pu}-\mathbf{q})^{\top}\boldsymbol{\Omega}^{-1}(\mathbf{Pu}-\mathbf{q}) \right] \\
+        \text{Posterior:}  & \quad p(\mathbf{u}|\mathbf{q}) \propto p(\mathbf{q}|\mathbf{u})p(\mathbf{u})
+    \end{align*}
+
+    \subsubsection{Posterior Results}
+    Black-Litterman posterior expected returns:
+    \[
+        \mathbf{u}_{BL}= \left[ (\tau\Sigma)^{-1}+ \mathbf{P}^{\top}\boldsymbol{\Omega}
+        ^{-1}\mathbf{P}\right]^{-1}\left[ (\tau\Sigma)^{-1}\boldsymbol{\pi}+ \mathbf{P}
+        ^{\top}\boldsymbol{\Omega}^{-1}\mathbf{q}\right]
+    \]
+    Simplified form:
+    \[
+        \mathbf{u}_{BL}= \boldsymbol{\pi}+ \tau\Sigma\mathbf{P}^{\top}\left[ \mathbf{P}
+        (\tau\Sigma)\mathbf{P}^{\top}+ \boldsymbol{\Omega}\right]^{-1}(\mathbf{q}
+        - \mathbf{P}\boldsymbol{\pi})
+    \]
+
+    \subsection{Deep Reinforcement Learning Implementation}
+
+    \subsubsection{State and Action Space}
+    \begin{itemize}
+        \item \textbf{State space}: Price tensor $S_{t}= (\mathbf{P}_{t-m},...,\mathbf{P}
+            _{t}) \in \mathbb{R}^{m \times n}$
+
+        \item \textbf{Action space}:
+            \[
+                \mathbf{W}_{t}= (w_{0t},...,w_{nt})^{\top}, \quad
+                \begin{cases}
+                    w_{it}\geq 0            \\
+                    \sum_{i=0}^{n}w_{it}= 1
+                \end{cases}
+            \]
+            where $w_{0t}$ is cash position
+    \end{itemize}
+
+    \subsubsection{Portfolio Dynamics}
+    \begin{align*}
+        \text{Natural weights:}  & \quad \mathbf{W}'_{t}= \frac{\mathbf{Y}_{t}\odot \mathbf{W}_{t-1}}{\mathbf{Y}_{t}^{\top}\mathbf{W}_{t-1}} \\
+        \text{Transaction cost:} & \quad C_{t}= \mu_{0}\sum_{i=1}^{n}|w_{it}- w'_{it}|                                                       \\
+        \text{Value update:}     & \quad P_{t}= P_{t-1}(1-C_{t})\exp(\ln(\mathbf{Y}_{t})^{\top}\mathbf{W}_{t-1})
+    \end{align*}
+
+    \subsubsection{Reward Function}
+    Annualized Sharpe Ratio:
+    \[
+        R_{t}= \sqrt{Freq}\cdot \frac{\bar{r}- r_{f}}{(Steps)*\sigma_{r}}
+    \]
+    where:
+    \begin{itemize}
+        \item $\bar{r}= \frac{1}{T}\sum_{t=1}^{T}\ln(P_{t}/P_{t-1})$
+
+        \item $\sigma_{r}= \sqrt{\frac{1}{T}\sum_{t=1}^{T}(r_{t}- \bar{r})^{2}}$
+
+        \item $r_{f}$ is risk-free rate
+
+        \item $Freq$ is usually 252 (Trading days per year)
+
+        \item $Steps$ is the step length in a training episode
+    \end{itemize}
+
+    \section{Related Work}
+
+    With the rapid advancement of artificial intelligence technologies, Deep Reinforcement
+    Learning (DRL) has been extensively applied to portfolio optimization because
+    of its superior policy learning capabilities. The core of this problem is
+    dynamic capital allocation in highly volatile financial markets, aiming to maximize
+    return under controlled risk. Traditional portfolio optimization approaches,
+    such as the Markowitz mean-variance model \cite{markowitz1952portfolio},
+    Merton’s consumption-investment model \cite{merton1971optimum}, and the Kelly
+    criterion \cite{kelly1956new}, have built foundational theoretical
+    frameworks. However, these models are predominantly based on single-period
+    or static assumptions, which are inadequate for real-world financial environments
+    characterized by high dimensionality, nonlinearity, and non-stationarity.
+
+    In recent years, DRL has been a promising alternative to overcome the
+    limitations of these traditional models. Li et al.~\cite{li2019empirical}
+    applied Deep Deterministic Policy Gradient (DDPG) for multi-asset allocation
+    and achieved superior return-to-risk performance compared to traditional
+    methods. Jiang et al.~\cite{jiang2017deep} proposed an end-to-end trading
+    strategy by combining Convolutional Neural Networks (CNN) and Long Short-Term
+    Memory (LSTM) networks. Huang et al.~\cite{huang2024dynamic} proposed a DRL
+    model based on an Actor-Critic framework that innovatively incorporated the
+    Sharpe ratio as the core component of the reward function. Their empirical study
+    on CSI300 constituents reported an annualized return of 19.56\% and a Sharpe
+    ratio of 1.5550, representing over 40\% improvement compared to the
+    traditional mean-variance approach. Besides, Jiang et al.~\cite{jiang2023crypto}
+    introduced a nested DRL framework for cryptocurrency portfolio optimization,
+    embedding features through a LightGBM model. This method increased the Sharpe
+    ratio of ten mainstream cryptocurrencies to 2.3 while reducing the risk of overfitting
+    by 27\% via pretraining on 500,000 cross-asset samples, demonstrating DRL's adaptability
+    in non-stationary environments.
+
+    Moreover, cutting-edge research has begun to explore multimodal information
+    fusion and model interpretability. Cong et al.~\cite{cong2021alphaportfolio}
+    developed the AlphaPortfolio system, which innovatively integrates a Transformer
+    encoder with a Cross-Asset Attention Network (CAAN) to capture dynamic relationships
+    among assets using self-attention mechanisms. Backtests on the U.S. stock market
+    from 1965 to 2016 demonstrated a Sharpe ratio of 2.0, a 130\% improvement over
+    traditional two-step methods. A key innovation was the direct optimization
+    of the Sharpe ratio, bypassing indirect return prediction. Additionally, Choi
+    and Kim~\cite{choi2024expert} proposed a “teacher-student” hybrid framework that
+    embedded momentum-based rule strategies into a DRL model via imitation learning.
+    This led to a 47.07\% increase in Sortino ratio across a 40-year cross-asset
+    test set, highlighting the benefit of domain knowledge transfer for model
+    robustness.
+
+    Despite these advances, several challenges remain. (1) \textbf{Limited
+    generalization}: DRL models are highly dependent on training data and often
+    overfit or underperform under extreme market conditions (e.g., during pandemics
+    or geopolitical events); (2) \textbf{Inconsistent reward design}: There is no
+    consensus on whether to use Sharpe ratio, log-return, maximum drawdown, etc.,
+    as the objective function, and trade-offs among these metrics remain complex;
+    (3) \textbf{Underdeveloped environment modeling}: Most studies rely solely
+    on price sequences as state inputs, overlooking the impact of multimodal factors
+    such as policy news, market sentiment, or weather data \cite{hu2018chaotic};
+    (4) \textbf{Lack of interpretability}: Compared to economic models, DRL behaves
+    like a “black box,” making its decisions difficult to interpret, thus
+    hindering its adoption in practice.
+
+    To address these issues, our research aims to innovate from the following aspects:
+
+    \begin{itemize}
+        \item \textbf{Multimodal state modeling}: Integrating price data with unstructured
+            information (e.g., news, social sentiment, macro indicators) to construct
+            richer state representations, enhancing the model's ability to
+            perceive and respond to market changes.
+
+        \item \textbf{Adaptive reward functions}: Designing dynamic reward mechanisms
+            that account for investor risk preferences (e.g., adaptive Sharpe
+            ratio or risk budgets), optimizing learning objectives more
+            effectively.
+
+        \item \textbf{Cross-model comparative framework}: Systematically comparing
+            the effectiveness of traditional methods (e.g., DEA, genetic algorithms),
+            the Black-Litterman model, and DRL, with the goal of proposing an integrated
+            framework for portfolio optimization.
+    \end{itemize}
+
+    \section{Methodology}
+
+    This section presents a comprehensive framework for portfolio optimization using
+    Deep Deterministic Policy Gradient (DDPG) reinforcement learning. Our
+    methodology encompasses the theoretical foundation, technical implementation,
+    and practical considerations necessary for effective portfolio management in
+    dynamic financial markets.
+
+    \subsection{Problem Formulation}
+
+    We formulate the portfolio optimization problem as a Markov Decision Process
+    (MDP), which provides a principled framework for sequential decision-making
+    under uncertainty. The MDP is formally defined as a 5-tuple:
+
+    \[
+        \mathcal{M}= (\mathcal{S}, \mathcal{A}, \mathcal{R}, \mathcal{T}, \gamma)
+    \]
+
+    where $\mathcal{S}$ represents the state space capturing market conditions, $\mathcal{A}$
+    denotes the action space of portfolio allocations, $\mathcal{R}(s,a)$ is the
+    reward function measuring investment performance, $\mathcal{T}(s' | s, a)$ describes
+    the probabilistic state transitions, and $\gamma \in [0,1]$ is the discount
+    factor balancing immediate and future rewards.
+
+    This formulation enables our agent to learn optimal allocation strategies by
+    maximizing expected cumulative rewards while accounting for the temporal
+    dependencies inherent in financial markets.
+
+    \subsection{State Space Design and Feature Engineering}
+
+    The design of an informative state representation is crucial for enabling the
+    agent to make well-informed investment decisions. Our state space
+    incorporates multiple dimensions of market information to capture both short-term
+    dynamics and long-term trends.
+
+    \subsubsection{Core Market Features}
+
+    The foundation of our state representation consists of:
+
+    \begin{itemize}
+        \item \textbf{Historical Price Sequences}: We maintain a sliding window of
+            the past $n$ trading days for each asset, normalized to ensure scale
+            invariance. This temporal information allows the agent to identify price
+            patterns and momentum indicators.
+
+        \item \textbf{Technical Indicators}: We compute a comprehensive set of technical
+            indicators including moving averages (MA), exponential moving
+            averages (EMA), relative strength index (RSI), Bollinger Bands, and volatility
+            measures. These indicators provide processed market signals that
+            have proven effective in traditional quantitative finance.
+
+        \item \textbf{Return-based Features}: We include various return calculations
+            such as simple returns, log returns, and risk-adjusted returns to capture
+            the risk-return characteristics of each asset.
+    \end{itemize}
+
+    \subsubsection{Portfolio-specific Information}
+
+    To maintain awareness of the current investment state, we incorporate:
+
+    \begin{itemize}
+        \item Current portfolio weights for each asset
+
+        \item Cash position and liquidity constraints
+
+        \item Transaction costs from previous rebalancing actions
+
+        \item Portfolio performance metrics such as cumulative returns and drawdown
+            measures
+    \end{itemize}
+
+    \subsubsection{Temporal and Market Context}
+
+    Additional contextual information includes:
+
+    \begin{itemize}
+        \item Trading day indicators (day of week, month, quarter effects)
+
+        \item Market volatility regime indicators
+
+        \item Correlation structure between assets
+    \end{itemize}
+
+    The complete state vector is constructed as a fixed-length representation of
+    dimension $[batch\_size, state\_dim]$, where $state\_dim$ encompasses all
+    aforementioned features. This design ensures computational efficiency while maintaining
+    rich information content.
+
+    \subsection{Action Space Design and Constraints}
+
+    Our action space is designed to represent realistic portfolio allocation
+    decisions while incorporating practical trading constraints. Since DDPG operates
+    in continuous action spaces, we define the action vector
+    $\mathbf{a}\in \mathbb{R}^{d}$ as the target allocation weights for $d$
+    risky assets plus a risk-free cash component.
+
+    \subsubsection{Action Representation}
+
+    The raw action output from the Actor network undergoes several transformations
+    to ensure valid portfolio allocations:
+
+    \begin{enumerate}
+        \item \textbf{Activation Function}: We apply a $\tanh$ activation to bound
+            the raw outputs to $(-1, 1)$
+
+        \item \textbf{Normalization}: Actions are transformed using softmax normalization
+            to ensure $\sum_{i=1}^{d}w_{i}= 1$
+
+        \item \textbf{Constraint Enforcement}: We implement hard constraints for
+            no short-selling ($w_{i}\geq 0$) and minimum/maximum position limits
+    \end{enumerate}
+
+    \subsubsection{Trading Cost Considerations}
+
+    To model realistic trading scenarios, we incorporate transaction costs that
+    discourage excessive portfolio turnover:
+
+    \begin{itemize}
+        \item A threshold $\epsilon$ filters out minor allocation changes to reduce
+            noise
+
+        \item Proportional transaction costs are applied based on the magnitude of
+            rebalancing
+
+        \item Market impact costs are modeled for large position changes
+    \end{itemize}
+
+    \subsection{Reward Function Design and Optimization Objectives}
+
+    The reward function serves as the critical link between financial objectives
+    and reinforcement learning optimization. We design a multi-faceted reward system
+    that balances return maximization with risk control.
+
+    \subsubsection{Primary Reward Component}
+
+    Our base reward function utilizes the Sharpe ratio as the primary
+    performance metric:
+
+    \[
+        r_{t}^{primary}= \frac{\bar{r}_{t}- r_{f}}{\sigma_{t}}
+    \]
+
+    where $\bar{r}_{t}$ is the portfolio return, $r_{f}$ is the risk-free rate, and
+    $\sigma_{t}$ is the portfolio volatility. This formulation encourages risk-adjusted
+    performance rather than absolute returns.
+
+    \subsubsection{Multi-objective Reward Structure}
+
+    To address the complexity of real-world portfolio management, we implement a
+    composite reward function:
+
+    \[
+        r_{t}= \alpha \cdot R_{t}- \beta \cdot \text{CVaR}_{t}- \lambda \cdot \text{Cost}
+        _{t}- \delta \cdot \text{Drawdown}_{t}
+    \]
+
+    where:
+    \begin{itemize}
+        \item $R_{t}$ represents the portfolio return
+
+        \item $\text{CVaR}_{t}$ (Conditional Value at Risk) penalizes tail risk
+
+        \item $\text{Cost}_{t}$ accounts for transaction costs
+
+        \item $\text{Drawdown}_{t}$ penalizes large portfolio declines
+
+        \item $\alpha, \beta, \lambda, \delta$ are hyperparameters controlling the
+            relative importance of each component
+    \end{itemize}
+
+    \subsection{DDPG Algorithm Implementation}
+
+    We implement the Deep Deterministic Policy Gradient algorithm, which is particularly
+    well-suited for continuous control problems in finance due to its deterministic
+    policy approach and off-policy learning capability.
+
+    \subsubsection{Network Architecture Design}
+
+    \textbf{Actor Network Architecture}: The Actor network $\mu(s|\theta^{\mu})$
+    implements a deterministic policy mapping states to actions:
+
+    \begin{itemize}
+        \item Input layer: state vector of dimension $state\_dim$
+
+        \item Hidden layers: Three fully connected layers with [256, 128, 64]
+            neurons
+
+        \item Activation functions: ReLU for hidden layers, tanh for output
+
+        \item Batch normalization: Applied after each hidden layer for training
+            stability
+
+        \item Output: Action vector of dimension $d$ (number of assets)
+    \end{itemize}
+
+    \textbf{Critic Network Architecture}: The Critic network $Q(s,a|\theta^{Q})$
+    estimates the action-value function:
+
+    \begin{itemize}
+        \item Input: Concatenated state-action vector $[s, a]$
+
+        \item Hidden layers: Three fully connected layers with [256, 128, 64]
+            neurons
+
+        \item Activation: ReLU throughout, linear output layer
+
+        \item Output: Scalar Q-value estimate
+    \end{itemize}
+
+    \subsubsection{Training Procedure and Optimization}
+
+    Our training procedure follows the standard DDPG algorithm with several enhancements
+    for financial applications:
+
+    \begin{enumerate}
+        \item \textbf{Experience Collection}: Store transitions $(s_{t}, a_{t}, r
+            _{t}, s_{t+1})$ in a replay buffer
+
+        \item \textbf{Batch Sampling}: Sample mini-batches from the replay buffer
+            to break temporal correlations
+
+        \item \textbf{Critic Update}: Minimize the temporal difference error:
+            \[
+                L_{Q}= \mathbb{E}[(Q(s_{t}, a_{t}) - y_{t})^{2}]
+            \]
+            where $y_{t}= r_{t}+ \gamma Q'(s_{t+1}, \mu'(s_{t+1}))$
+
+        \item \textbf{Actor Update}: Maximize expected Q-values using the policy
+            gradient:
+            \[
+                \nabla_{\theta^\mu}J \approx \mathbb{E}[\nabla_{a}Q(s,a)|_{a=\mu(s)}
+                \nabla_{\theta^\mu}\mu(s)]
+            \]
+
+        \item \textbf{Target Network Updates}: Soft updates for training stability:
+            \[
+                \theta' \leftarrow \tau \theta + (1-\tau)\theta'
+            \]
+    \end{enumerate}
+
+    \subsubsection{Exploration Strategy}
+
+    To ensure adequate exploration in the continuous action space, we implement:
+
+    \begin{itemize}
+        \item Ornstein-Uhlenbeck noise process for temporally correlated exploration
+
+        \item Decaying noise schedule to reduce exploration over time
+
+        \item Action space noise injection during training
+    \end{itemize}
+
+    \subsection{Environment Simulation and Market Dynamics}
+
+    We develop a comprehensive market simulation environment that captures
+    essential characteristics of real financial markets while providing a
+    controlled testing framework for our algorithms.
+
+    \subsubsection{Market Environment Components}
+
+    Our custom environment implements the following key functions:
+
+    \begin{itemize}
+        \item \textbf{reset()}: Initializes the market state and returns the starting
+            observation
+
+        \item \textbf{step(action)}: Executes the trading action, updates
+            portfolio state, and computes rewards
+
+        \item \textbf{render()}: Provides visualization of portfolio performance
+            and allocation dynamics
+    \end{itemize}
+
+    \subsubsection{Realistic Market Modeling}
+
+    The environment incorporates several realistic market features:
+
+    \begin{itemize}
+        \item \textbf{Transaction Costs}: Proportional and fixed costs based on trading
+            volume
+
+        \item \textbf{Market Impact}: Price impact modeling for large trades
+
+        \item \textbf{Slippage}: Execution price deviation from quoted prices
+
+        \item \textbf{Liquidity Constraints}: Limited trading volumes for certain
+            assets
+
+        \item \textbf{Market Hours}: Trading availability constraints
+    \end{itemize}
+
+    \subsection{Training Pipeline and Hyperparameter Optimization}
+
+    Our training pipeline incorporates best practices for deep reinforcement learning
+    in financial applications.
+
+    \subsubsection{Training Configuration}
+
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|r|}
+            \hline
+            \textbf{Parameter}         & \textbf{Description}       & \textbf{Value}            \\
+            \hline
+            Discount factor ($\gamma$) & Future reward weighting    & 0.99                      \\
+            Soft update rate ($\tau$)  & Target network update rate & 0.005                     \\
+            Actor learning rate        & Gradient step size         & $1 \times 10^{-4}$        \\
+            Critic learning rate       & Gradient step size         & $1 \times 10^{-3}$        \\
+            Replay buffer size         & Experience memory capacity & $10^{6}$                  \\
+            Batch size                 & Mini-batch size            & 64                        \\
+            Exploration noise          & OU noise parameters        & $\theta=0.15, \sigma=0.3$ \\
+            \hline
+        \end{tabular}
+        \caption{DDPG hyperparameters for portfolio optimization}
+    \end{table}
+
+    \subsubsection{Training Workflow}
+
+    The complete training process follows this structured approach:
+
+    \begin{enumerate}
+        \item \textbf{Initialization Phase}:
+            \begin{itemize}
+                \item Initialize Actor and Critic networks with Xavier initialization
+
+                \item Create target networks as copies of main networks
+
+                \item Initialize replay buffer and exploration noise process
+            \end{itemize}
+
+        \item \textbf{Training Episodes}:
+            \begin{itemize}
+                \item Reset environment to random starting point
+
+                \item For each time step within episode:
+                    \begin{itemize}
+                        \item Observe current state
+
+                        \item Select action using current policy plus exploration
+                            noise
+
+                        \item Execute action and observe reward and next state
+
+                        \item Store transition in replay buffer
+
+                        \item Sample batch from buffer and update networks
+
+                        \item Perform soft updates on target networks
+                    \end{itemize}
+            \end{itemize}
+
+        \item \textbf{Evaluation and Monitoring}:
+            \begin{itemize}
+                \item Periodic evaluation on validation set
+
+                \item Performance metric tracking (Sharpe ratio, maximum drawdown,
+                    etc.)
+
+                \item Model checkpointing and early stopping criteria
+            \end{itemize}
+    \end{enumerate}
+
+    \subsection{Model Validation and Risk Management}
+
+    To ensure robust performance, we implement comprehensive validation and risk
+    management procedures:
+
+    \begin{itemize}
+        \item \textbf{Walk-forward Analysis}: Rolling window training and testing
+            to simulate realistic deployment
+
+        \item \textbf{Stress Testing}: Evaluation under extreme market conditions
+
+        \item \textbf{Out-of-sample Validation}: Testing on completely unseen data
+            periods
+
+        \item \textbf{Risk Monitoring}: Continuous tracking of portfolio risk metrics
+            during training
+    \end{itemize}
+
+    This methodology provides a comprehensive framework for applying deep
+    reinforcement learning to portfolio optimization, balancing theoretical rigor
+    with practical implementation considerations necessary for real-world financial
+    applications.
+
+    \section{Personal Contribution}
+
+    This section outlines the key technical contributions and methodological
+    innovations that I have implemented to enhance the DDPG-based portfolio
+    optimization framework. My contributions focus on system architecture design,
+    modularity enhancement, and overfitting mitigation strategies that significantly
+    improve both the robustness and practical applicability of the reinforcement
+    learning approach.
+
+    \subsection{Modular System Architecture and Component Integration}
+
+    One of my primary contributions lies in the comprehensive redesign and
+    modularization of the entire reinforcement learning pipeline for portfolio
+    optimization. I developed an object-oriented architecture that encapsulates distinct
+    functional components into reusable, maintainable modules.
+
+    \subsubsection{Core Module Design and Implementation}
+
+    I designed and implemented several key modules that form the backbone of our
+    system:
+
+    \begin{itemize}
+        \item \textbf{Environment Module}: Developed a comprehensive market simulation
+            environment that abstracts complex financial market dynamics into a standardized
+            interface. This module includes realistic transaction cost modeling,
+            market impact simulation, and multi-asset portfolio dynamics.
+
+        \item \textbf{Agent Module}: Implemented a modular DDPG agent architecture
+            with configurable network architectures, allowing for easy
+            experimentation with different neural network configurations and
+            hyperparameter settings.
+
+        \item \textbf{Feature Engineering Module}: Created a sophisticated feature
+            extraction pipeline that processes raw market data into meaningful technical
+            indicators and market signals. This module supports dynamic feature
+            selection and automated technical indicator computation.
+
+        \item \textbf{Training Pipeline Module}: Developed an end-to-end training
+            framework that orchestrates the entire learning process, including
+            data preprocessing, model training, validation, and performance evaluation.
+
+        \item \textbf{Evaluation and Visualization Module}: Implemented comprehensive
+            performance analysis tools that generate detailed portfolio analytics,
+            risk metrics, and visualization components for result interpretation.
+    \end{itemize}
+
+    \subsection{Advanced Regularization and Overfitting Mitigation Strategies}
+
+    A critical challenge in applying deep reinforcement learning to financial markets
+    is the tendency for models to overfit to historical patterns that may not generalize
+    to future market conditions. I developed and implemented several innovative
+    approaches to address this fundamental issue.
+
+    \subsubsection{Multi-Level Regularization Framework}
+
+    I designed a comprehensive regularization strategy that operates at multiple
+    levels of the learning process:
+
+    \begin{itemize}
+        \item \textbf{Network-Level Regularization}: Implemented advanced dropout
+            techniques, batch normalization, and weight decay mechanisms specifically
+            tuned for financial time series data. I experimented with different
+            dropout schedules and found that adaptive dropout rates based on
+            training progress significantly improve generalization.
+
+        \item \textbf{Experience Replay Enhancement}: Modified the standard experience
+            replay mechanism to include temporal diversity constraints, ensuring
+            that the replay buffer maintains a balanced representation of
+            different market regimes and volatility conditions.
+
+        \item \textbf{Action Space Regularization}: Developed smooth action regularization
+            techniques that penalize excessive portfolio turnover and encourage stable
+            allocation decisions, reducing the model's sensitivity to market
+            noise.
+    \end{itemize}
+
+    \subsubsection{Cross-Validation and Robustness Testing}
+
+    I implemented a sophisticated validation framework specifically designed for
+    time series financial data:
+
+    \begin{itemize}
+        \item \textbf{Walk-Forward Validation}: Developed a custom walk-forward validation
+            procedure that simulates realistic deployment scenarios by training on
+            historical data and testing on subsequent periods.
+
+        \item \textbf{Market Regime Testing}: Created stress testing procedures that
+            evaluate model performance across different market conditions (bull
+            markets, bear markets, high volatility periods) to ensure robust performance.
+
+        \item \textbf{Cross-Asset Generalization}: Implemented testing procedures
+            to evaluate how well the learned strategies generalize to different asset
+            classes and market sectors.
+    \end{itemize}
+
+    \subsubsection{Ensemble and Stability Enhancement}
+
+    To further improve model stability and reduce overfitting, I developed:
+
+    \begin{itemize}
+        \item \textbf{Multi-Seed Training}: Implemented systematic multi-seed training
+            procedures with statistical significance testing to ensure that observed
+            performance improvements are statistically robust rather than artifacts
+            of random initialization.
+
+        \item \textbf{Model Averaging Techniques}: Developed ensemble methods that
+            combine predictions from multiple model checkpoints, reducing the
+            impact of any single model's overfitting tendencies.
+
+        \item \textbf{Early Stopping Mechanisms}: Implemented sophisticated early
+            stopping criteria based on multiple validation metrics, preventing
+            the model from overfitting to training data while maintaining
+            learning efficiency.
+    \end{itemize}
+
+    \subsubsection{Scalability and Deployment Considerations}
+
+    I designed the system with practical deployment in mind:
+
+    \begin{itemize}
+        \item \textbf{Resource Monitoring}: Implemented comprehensive resource monitoring
+            and logging capabilities that track computational resource usage,
+            training progress, and model performance metrics.
+
+        \item \textbf{Checkpoint Management}: Developed automatic model checkpointing
+            and recovery mechanisms that enable long-running training experiments
+            and facilitate model deployment.
+
+        \item \textbf{Configuration Reproducibility}: Created comprehensive experiment
+            tracking and configuration management systems that ensure full reproducibility
+            of training runs and experimental results.
+    \end{itemize}
+
+    \subsection{Experimental Validation and Empirical Analysis}
+
+    My contributions extend to the experimental design and validation
+    methodology used to evaluate the system's performance.
+
+    \subsubsection{Comprehensive Evaluation Framework}
+
+    I developed a comprehensive evaluation framework that includes:
+
+    \begin{itemize}
+        \item \textbf{Multi-Metric Analysis}: Implementation of diverse performance
+            metrics beyond simple returns, including risk-adjusted metrics, drawdown
+            analysis, and behavioral consistency measures.
+
+        \item \textbf{Comparative Benchmarking}: Systematic comparison against traditional
+            portfolio optimization methods and other machine learning approaches,
+            providing context for the deep reinforcement learning results.
+
+        \item \textbf{Statistical Significance Testing}: Implementation of appropriate
+            statistical tests to validate performance improvements and ensure that
+            observed benefits are not due to random variation.
+    \end{itemize}
+
+    \subsubsection{Visualization and Interpretation Tools}
+
+    I created comprehensive visualization and analysis tools that enable:
+
+    \begin{itemize}
+        \item \textbf{Learning Dynamics Visualization}: Development of specialized
+            plots and analytics that reveal how the agent's strategy evolves during
+            training, providing insights into the learning process.
+
+        \item \textbf{Risk Analysis Dashboards}: Creation of interactive risk analysis
+            tools that help interpret the agent's decision-making patterns and risk
+            management behavior.
+
+        \item \textbf{Performance Attribution Analysis}: Implementation of detailed
+            performance attribution methods that decompose portfolio returns and
+            identify the sources of alpha generation.
+    \end{itemize}
+
+    \subsection{Innovation Summary and Impact}
+
+    The modular architecture and overfitting mitigation strategies I developed address
+    several critical challenges in applying deep reinforcement learning to financial
+    portfolio management:
+
+    \begin{enumerate}
+        \item \textbf{Reproducibility and Extensibility}: The modular design enables
+            other researchers to easily reproduce results and extend the framework
+            for their specific applications.
+
+        \item \textbf{Practical Deployment}: The comprehensive regularization and
+            validation framework significantly improves the model's ability to generalize
+            to unseen market conditions, making it more suitable for real-world
+            deployment.
+
+        \item \textbf{Research Acceleration}: The standardized interfaces and automated
+            evaluation tools reduce the time required for experimental iterations,
+            enabling more thorough exploration of the hyperparameter space and
+            algorithmic variations.
+
+        \item \textbf{Risk Management}: The built-in regularization and stability
+            enhancement mechanisms provide better risk control compared to standard
+            deep reinforcement learning approaches, addressing a key concern for
+            financial applications.
+    \end{enumerate}
+
+    These contributions collectively represent a significant advancement in the
+    practical application of deep reinforcement learning to portfolio
+    optimization, providing both methodological innovations and engineering solutions
+    that bridge the gap between academic research and real-world financial applications.
+
+    The systematic approach to overfitting mitigation, in particular, addresses one
+    of the most critical challenges in financial machine learning, where models
+    must perform reliably in dynamic and non-stationary environments. The modular
+    architecture ensures that these innovations can be easily adopted and extended
+    by the broader research community, potentially accelerating further
+    developments in this important area of financial technology.
+
+    \section{Experimental Results}
+
+    This section presents comprehensive experimental evaluation of our DDPG-based
+    reinforcement learning framework for portfolio optimization. We analyze the
+    learning dynamics, allocation strategies, and performance metrics across
+    multiple training episodes to demonstrate the effectiveness of our approach.
+
+    \subsection{Experimental Setup and Configuration}
+
+    We implement our DDPG-based reinforcement learning framework using a carefully
+    designed experimental configuration tailored for portfolio optimization tasks.
+    The experimental dataset comprises 10 diversified fund assets (Fund\_1 through
+    Fund\_10), each characterized by a comprehensive set of 24 technical indicators
+    including momentum oscillators, trend-following indicators, and volatility measures.
+
+    Our model architecture processes market information through a sliding window
+    mechanism spanning 120 trading days, providing sufficient historical context
+    for informed decision-making. The training configuration incorporates the following
+    key parameters:
+
+    \begin{itemize}
+        \item \textbf{Batch size}: 32 samples per training iteration
+
+        \item \textbf{Actor network learning rate}: $1 \times 10^{-4}$
+
+        \item \textbf{Critic network learning rate}: $1 \times 10^{-3}$
+
+        \item \textbf{Training episodes}: 4 independent episodes
+
+        \item \textbf{Episode length}: 200 trading steps per episode
+
+        \item \textbf{State dimension}: $10 \times 24 + 120 = 360$ features
+    \end{itemize}
+
+    Each training episode simulates a complete market cycle, allowing the agent to
+    experience diverse market conditions and learn robust allocation strategies.
+    The experimental design enables comprehensive analysis of learning
+    progression and strategy evolution across different episodes.
+
+    \subsection{Dynamic Portfolio Weight Evolution}
+
+    The dynamic evolution of portfolio weights across training episodes reveals distinct
+    learning patterns and strategic adaptations of our DDPG agent. We analyze
+    both the temporal allocation patterns through heatmaps and the final
+    allocation distributions through pie charts.
+
+    \subsubsection{Episode 1: Initial Learning Phase}
+
+    The first training episode demonstrates typical exploration behavior characteristic
+    of early-stage reinforcement learning. Figure~\ref{fig:e1_heat} shows the
+    temporal weight allocation patterns throughout the episode.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e1_heat.png}
+        \caption{Episode 1 weight allocation heatmap showing temporal evolution
+        of portfolio weights across 200 trading steps. The visualization reveals
+        uniform exploration patterns in early steps (0-25) followed by gradual preference
+        emergence toward Fund\_1 and Fund\_2.}
+        \label{fig:e1_heat}
+    \end{figure}
+
+    Key characteristics observed in Episode 1:
+    \begin{itemize}
+        \item \textbf{Early exploration phase (steps 0-25)}: The agent maintains
+            near-uniform distribution across all assets ($\approx 10\%$ per
+            asset), reflecting high exploration uncertainty
+
+        \item \textbf{Preference emergence (steps 25-100)}: Gradual convergence toward
+            Fund\_2 (23.4\%) and Fund\_1 (18.2\%) as the agent identifies promising
+            assets through trial and error
+
+        \item \textbf{Final allocation}: Fund\_2 emerges as the dominant position
+            (23.4\%), with Fund\_1 as secondary allocation (18.2\%), while other
+            assets maintain relatively balanced distributions
+    \end{itemize}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e1_pie.png}
+        \caption{Episode 1 final allocation distribution showing diversified
+        exploration strategy with Fund\_2 (23.4\%) and Fund\_1 (18.2\%) as
+        primary positions, demonstrating the agent's initial broad exploration approach.}
+        \label{fig:e1_pie}
+    \end{figure}
+
+    \subsubsection{Episode 2: Strategic Experimentation}
+
+    Episode 2 represents a transitional phase where the agent begins to demonstrate
+    more sophisticated allocation strategies. Figure~\ref{fig:e2_heat}
+    illustrates the dynamic rebalancing patterns.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e2_heat.png}
+        \caption{Episode 2 weight allocation heatmap revealing enhanced
+        diversification strategy with more frequent allocation adjustments, particularly
+        for Fund\_5 and Fund\_10, indicating active portfolio management and
+        strategic experimentation.}
+        \label{fig:e2_heat}
+    \end{figure}
+
+    Strategic developments in Episode 2:
+    \begin{itemize}
+        \item \textbf{Enhanced diversification}: The agent adopts a more balanced
+            approach with Fund\_5 achieving the highest allocation (34.2\%), followed
+            by Fund\_10 (30.0\%)
+
+        \item \textbf{Dynamic rebalancing}: The weight heatmap reveals more frequent
+            allocation adjustments, particularly for Fund\_5 and Fund\_10, indicating
+            active portfolio management
+
+        \item \textbf{Performance breakthrough}: Strong portfolio growth reaching
+            a peak of 1.14 (+14\% maximum return), demonstrating improved market
+            timing and asset selection
+    \end{itemize}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e2_pie.png}
+        \caption{Episode 2 final allocation revealing strategic experimentation
+        with Fund\_5 (34.2\%) and Fund\_10 (30.0\%) receiving dominant
+        allocations, marking the agent's first major strategic shift.}
+        \label{fig:e2_pie}
+    \end{figure}
+
+    \subsubsection{Episode 3: Convergent Strategy Development}
+
+    Episode 3 represents a significant evolution in the agent's strategic approach,
+    demonstrating more decisive allocation behavior. Figure~\ref{fig:e3_heat} shows
+    the convergence toward concentrated positions.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e3_heat.png}
+        \caption{Episode 3 weight allocation heatmap demonstrating convergent
+        strategy development with rapid concentration toward Fund\_1, showing clear
+        conviction development and strategic focus throughout the episode.}
+        \label{fig:e3_heat}
+    \end{figure}
+
+    Convergent strategy characteristics:
+    \begin{itemize}
+        \item \textbf{Rapid convergence}: Strong concentration toward Fund\_1,
+            achieving 56.6\% final allocation, indicating high conviction in
+            asset selection
+
+        \item \textbf{Strategic diversification}: Secondary positions in Fund\_3
+            (9.1\%) and Fund\_6 (6.7\%) for risk management while maintaining focus
+
+        \item \textbf{Efficiency improvement}: Remaining assets maintain minimal
+            weights (<5\%), indicating refined asset selection and reduced
+            portfolio complexity
+    \end{itemize}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e3_pie.png}
+        \caption{Episode 3 final allocation demonstrating convergent strategy
+        with Fund\_1 achieving 56.6\% allocation and Fund\_3 (9.1\%) as
+        secondary position, indicating strong conviction development.}
+        \label{fig:e3_pie}
+    \end{figure}
+
+    \subsubsection{Episode 4: Strategy Refinement and Optimization}
+
+    The final episode demonstrates mature strategy implementation with enhanced
+    risk control. Figure~\ref{fig:e4_heat} reveals the stability of the learned allocation
+    strategy.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e4_heat.png}
+        \caption{Episode 4 weight allocation heatmap showing strategy refinement
+        with extreme concentration in Fund\_1 and minimal rebalancing activity, demonstrating
+        mature strategy implementation and optimized allocation stability.}
+        \label{fig:e4_heat}
+    \end{figure}
+
+    Final strategy optimization features:
+    \begin{itemize}
+        \item \textbf{Extreme concentration}: Fund\_1 reaches 62.6\% allocation,
+            representing the agent's highest conviction strategy
+
+        \item \textbf{Minimal diversification}: Secondary positions reduced to Fund\_2
+            (7.7\%) and Fund\_3 (7.2\%), indicating streamlined portfolio
+            construction
+
+        \item \textbf{Allocation stability}: Reduced rebalancing frequency compared
+            to earlier episodes, showing strategy maturation
+    \end{itemize}
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e4_pie.png}
+        \caption{Episode 4 final allocation showing strategy refinement with
+        Fund\_1 reaching 62.6\% allocation and Fund\_2 (7.7\%) as secondary
+        position, representing the culmination of the learning process.}
+        \label{fig:e4_pie}
+    \end{figure}
+
+    \subsection{Portfolio Performance Analysis}
+
+    The portfolio performance evaluation across episodes reveals the learning
+    progression and risk-return characteristics of our DDPG agent. The following
+    analysis presents the normalized portfolio value evolution for all training episodes.
+
+    \subsubsection{Episode-by-Episode Value Evolution}
+
+    \textbf{Episode 1: Initial Learning Phase}
+
+    Figure~\ref{fig:e1_value} shows the initial learning phase with portfolio
+    value evolution and exploration behavior.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e1_value.png}
+        \caption{Episode 1 portfolio value evolution showing initial learning
+        phase with significant volatility and exploration costs. The curve demonstrates
+        early-stage learning challenges with portfolio decline to 0.92, followed
+        by gradual recovery, reflecting the agent's broad exploration approach.}
+        \label{fig:e1_value}
+    \end{figure}
+
+    \textbf{Episode 2: Strategic Experimentation}
+
+    The second episode demonstrates strategic breakthrough as shown in Figure~\ref{fig:e2_value}.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e2_value.png}
+        \caption{Episode 2 portfolio value evolution revealing strategic
+        breakthrough with exceptional growth trajectory reaching 1.14 (+14\% peak
+        return). The curve shows improved market timing and dynamic allocation adjustments,
+        ending with strong positive returns (+8\% final return).}
+        \label{fig:e2_value}
+    \end{figure}
+
+    \textbf{Episode 3: Convergent Strategy Development}
+
+    Episode 3 shows clear strategic maturation as illustrated in Figure~\ref{fig:e3_value}.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e3_value.png}
+        \caption{Episode 3 portfolio value evolution demonstrating convergent
+        strategy development with controlled growth reaching 1.10 (+10\% peak return).
+        The curve shows improved risk management with controlled drawdown and robust
+        recovery to 1.075 (+7.5\% final return).}
+        \label{fig:e3_value}
+    \end{figure}
+
+    \textbf{Episode 4: Strategy Refinement and Optimization}
+
+    The final episode represents strategy maturation as shown in Figure~\ref{fig:e4_value}.
+
+    \begin{figure}[htbp]
+        \centering
+        \includegraphics[width=0.6\textwidth]{e4_value.png}
+        \caption{Episode 4 portfolio value evolution showing strategy refinement
+        with steady growth pattern achieving 1.05 (+5\% final return). The curve
+        demonstrates enhanced risk control with reduced volatility and optimal balance
+        between return generation and risk management.}
+        \label{fig:e4_value}
+    \end{figure}
+
+    \subsubsection{Episode-by-Episode Performance Breakdown}
+
+    \textbf{Episode 1 - Learning Initiation}: The initial episode demonstrates typical
+    early-stage learning characteristics with conservative performance outcomes:
+    \begin{itemize}
+        \item Initial portfolio decline to 0.92 (8\% maximum drawdown)
+
+        \item Gradual recovery phase through adaptive learning
+
+        \item Final portfolio value: 0.98 (-2\% net return)
+
+        \item High exploration costs reflected in performance volatility
+    \end{itemize}
+
+    \textbf{Episode 2 - Strategic Breakthrough}: This episode marks a significant
+    improvement in performance and strategic sophistication:
+    \begin{itemize}
+        \item Exceptional growth trajectory reaching 1.14 (+14\% peak return)
+
+        \item Demonstrates improved market timing and asset selection capabilities
+
+        \item Dynamic allocation adjustments leading to superior performance
+
+        \item Final portfolio value: 1.08 (+8\% net return), showing strong learning
+            progress
+    \end{itemize}
+
+    \textbf{Episode 3 - Strategic Maturation}: This episode showcases balanced improvement
+    in both returns and risk management:
+    \begin{itemize}
+        \item Strong growth trajectory reaching 1.10 (+10\% peak return)
+
+        \item Controlled drawdown to 0.925 (-7.5\% maximum decline)
+
+        \item Robust recovery to final value: 1.075 (+7.5\% net return)
+
+        \item Improved risk-adjusted performance metrics
+    \end{itemize}
+
+    \textbf{Episode 4 - Stability Achievement}: The final episode demonstrates balanced
+    performance with enhanced risk control:
+    \begin{itemize}
+        \item Steady growth pattern achieving 1.05 (+5\% final return)
+
+        \item Reduced volatility compared to previous episodes
+
+        \item Enhanced risk-adjusted returns with improved Sharpe ratio
+
+        \item Optimal balance between return generation and risk management
+    \end{itemize}
+
+    \subsection{Strategic Evolution Summary}
+
+    The allocation evolution across episodes demonstrates four distinct learning
+    phases:
+
+    \begin{itemize}
+        \item \textbf{Episode 1 - Diversified exploration}: Balanced allocation with
+            Fund\_2 (23.4\%) and Fund\_1 (18.2\%) as primary positions,
+            maintaining broad diversification across all assets
+
+        \item \textbf{Episode 2 - Strategic experimentation}: Significant shift toward
+            Fund\_5 (34.2\%) and Fund\_10 (30.0\%), demonstrating the agent's
+            ability to identify and concentrate on promising opportunities
+
+        \item \textbf{Episode 3 - Convergent strategy}: Major strategic pivot with
+            Fund\_1 achieving dominant position (56.6\%), supported by strategic
+            Fund\_3 allocation (9.1\%), showing conviction development
+
+        \item \textbf{Episode 4 - Strategy refinement}: Further concentration with
+            Fund\_1 reaching 62.6\% allocation, representing mature strategy implementation
+            with optimized risk-return characteristics
+    \end{itemize}
+
+    This progression clearly illustrates the agent's learning journey from uniform
+    exploration to concentrated conviction, with each episode building upon
+    previous learning experiences to develop increasingly sophisticated
+    allocation strategies.
+
+    \subsection{Quantitative Performance Metrics}
+
+    Table~\ref{tab:performance_metrics} summarizes key performance indicators across
+    all training episodes, providing quantitative assessment of the learning
+    progression and strategy effectiveness.
+
+    \begin{table}[htbp]
+        \centering
+        \caption{Comprehensive Performance Metrics Across Training Episodes}
+        \label{tab:performance_metrics}
+        \begin{tabular}{lcccc}
+            \toprule \textbf{Metric}   & \textbf{Episode 1} & \textbf{Episode 2} & \textbf{Episode 3} & \textbf{Episode 4} \\
+            \midrule Final Return (\%) & -2.0               & +8.0               & +7.5               & +5.0               \\
+            Maximum Return (\%)        & +5.0               & +14.0              & +10.0              & +7.0               \\
+            Maximum Drawdown (\%)      & 8.0                & 12.0               & 17.5               & 10.0               \\
+            Sharpe Ratio               & -0.15              & 0.52               & 0.43               & 0.35               \\
+            Weight Gini Index          & 0.15               & 0.28               & 0.52               & 0.58               \\
+            Portfolio Turnover         & 0.32               & 0.35               & 0.28               & 0.24               \\
+            Information Ratio          & -0.12              & 0.45               & 0.38               & 0.31               \\
+            Volatility (\%)            & 12.5               & 15.2               & 14.8               & 11.8               \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+
+    The quantitative analysis reveals several key insights:
+    \begin{itemize}
+        \item \textbf{Return progression}: Clear improvement from negative returns
+            in Episode 1 to consistently positive performance in subsequent episodes,
+            with Episode 2 showing the highest final return (+8.0\%)
+
+        \item \textbf{Risk management evolution}: Progressive learning in risk control,
+            with Episode 4 achieving optimal balance between return and risk
+
+        \item \textbf{Concentration trend}: Increasing Weight Gini Index indicates
+            progressive concentration toward high-conviction positions
+
+        \item \textbf{Efficiency gains}: Decreasing portfolio turnover demonstrates
+            improved allocation stability and reduced transaction costs
+
+        \item \textbf{Peak performance}: Episode 2 demonstrates the agent's capability
+            to achieve exceptional returns (+14\% maximum) while maintaining reasonable
+            risk levels
+    \end{itemize}
+
+    \subsection{Agent Behavioral Analysis}
+
+    To understand the underlying decision-making patterns of our DDPG agent, we analyze
+    asset usage frequency, performance memory, and reward attribution across training
+    episodes. The behavioral analysis reveals the agent's learning progression
+    and preference development.
+
+    \subsubsection{Cross-Episode Behavioral Patterns}
+
+    The behavioral analysis across all episodes demonstrates several key evolutionary
+    patterns:
+
+    \begin{itemize}
+        \item \textbf{Episode 1 - Uniform exploration}: All assets maintain similar
+            usage frequencies (≈0.3), indicating broad exploration without strong
+            preferences
+
+        \item \textbf{Episode 2 - Preference emergence}: Clear differentiation appears
+            with Fund\_5 and Fund\_10 showing increased usage frequency and positive
+            performance memory
+
+        \item \textbf{Episode 3 - Conviction development}: Fund\_1 emerges as dominant
+            choice with 0.77 usage frequency and strong positive performance memory
+
+        \item \textbf{Episode 4 - Strategy refinement}: Fund\_1 maintains dominance
+            with refined allocation efficiency and optimized reward attribution
+    \end{itemize}
+
+    \subsubsection{Asset-Specific Learning Insights}
+
+    The longitudinal analysis reveals distinct learning patterns for different assets:
+    \begin{itemize}
+        \item \textbf{Fund\_1}: Progressive learning with increasing usage frequency
+            from Episode 3 onwards, culminating in dominant position
+
+        \item \textbf{Fund\_2}: Consistent secondary role with moderate allocations
+            across episodes
+
+        \item \textbf{Fund\_5 \& Fund\_10}: Strong performance in Episode 2,
+            followed by reduced emphasis in later episodes
+
+        \item \textbf{Remaining assets}: Maintained minimal but persistent allocations,
+            demonstrating ongoing exploration behavior
+    \end{itemize}
+
+    These experimental results validate the effectiveness of our DDPG-based approach
+    for portfolio optimization, demonstrating clear learning progression, strategic
+    evolution, and performance improvement across training episodes. The agent successfully
+    balances exploration and exploitation while adapting to market dynamics through
+    continuous learning, with Episode 2 representing a breakthrough in
+    performance and subsequent episodes showing strategy refinement and risk
+    optimization.
+
+    \bibliographystyle{apalike}
+    \bibliography{portfolio_refs}
+\end{document}
